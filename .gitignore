@@ -1,0 +1,76 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+
+# ── Virtual environments ───────────────────────────────────────────────────────
+venv/
+env/
+.venv/
+.env/
+
+# ── Jupyter ────────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Large binary outputs ───────────────────────────────────────────────────────
+*.pkl
+
+# ── LaTeX build artifacts ──────────────────────────────────────────────────────
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
+*.pdf
+*.bak
+
+# ── Scratch / draft files ──────────────────────────────────────────────────────
+temp.tex
+simple.tex
+poster.tex
+DR_PCMCI.md
+check_bib.py
+
+# ── OS ─────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ─────────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ── Claude Code ────────────────────────────────────────────────────────────────
+.claude/
+
+# ── Generated figures (not referenced in paper) ────────────────────────────────
+fig_pred_*.png
+fig_*_all.png
+fig_ex_estac.png
+fig_8var_ral_pequeno.png
+figures/history_*.png
+figures/predictions_*.png
+figures/causal_graph_4var.png
+figures/causal_graph_8var.png
+figures/causal_graph_threshold.png
+cropped-logomarca-uerj.png
+
+# ── Institutional / unrelated ──────────────────────────────────────────────────
+paper/
+"Ensaio em Regularização Causal para Previsão de Séries Temporais com Redes LSTM.pdf"
+
+# ── Run logs (reproducible from scripts) ──────────────────────────────────────
+results/*.log
