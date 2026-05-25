@@ -1,8 +1,8 @@
-# Causal Regularization for Time Series Forecasting with LSTM Networks
+# When Do Causal Graphs Improve LSTM Forecasting? Mechanisms, Moderators, and PAC-Bayes Guarantees
 
 Code and data for the paper:
 
-> **Ensaio em Regularização Causal para Previsão de Séries Temporais com Redes LSTM**
+> **Quando Grafos Causais Melhoram a Previsão com LSTMs: Mecanismos, Moderadores e Garantias PAC-Bayes**
 > Lucas Rafael de Andrade (2026)
 
 ## Overview
@@ -122,8 +122,8 @@ If you use this code, please cite the paper (BibTeX will be updated upon publica
 
 ```bibtex
 @article{andrade2026causal,
-  title  = {Ensaio em Regulariza\c{c}\~ao Causal para Previs\~ao de S\'eries
-             Temporais com Redes {LSTM}},
+  title  = {Quando Grafos Causais Melhoram a Previs\~ao com {LSTMs}: Mecanismos,
+             Moderadores e Garantias {PAC-Bayes}},
   author = {Andrade, Lucas Rafael de},
   year   = {2026},
   note   = {Preprint}
