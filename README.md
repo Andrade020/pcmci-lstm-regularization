@@ -3,7 +3,7 @@
 Code and data for the paper:
 
 > **Ensaio em Regularização Causal para Previsão de Séries Temporais com Redes LSTM**
-> Lucas Rafael de Andrade (2025)
+> Lucas Rafael de Andrade (2026)
 
 ## Overview
 
@@ -121,11 +121,11 @@ Based on the experimental findings:
 If you use this code, please cite the paper (BibTeX will be updated upon publication):
 
 ```bibtex
-@article{andrade2025causal,
+@article{andrade2026causal,
   title  = {Ensaio em Regulariza\c{c}\~ao Causal para Previs\~ao de S\'eries
              Temporais com Redes {LSTM}},
   author = {Andrade, Lucas Rafael de},
-  year   = {2025},
+  year   = {2026},
   note   = {Preprint}
 }
 ```
