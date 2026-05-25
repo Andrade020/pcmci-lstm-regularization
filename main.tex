@@ -107,7 +107,9 @@ O LiNGAM (Linear Non-Gaussian Acyclic Model) assume que as relações são linea
 Para relações não lineares, o TiMINo (Time Series Models with Independent Noise) generaliza essa ideia, permitindo funções não lineares arbitrárias, desde que os termos de ruído de cada variável sejam independentes \cite{peters2013}. Sob essa condição, o TiMINo pode identificar estruturas causais com feedbacks não lineares. Uma característica importante é que o método se abstém de produzir um resultado se os dados violarem suas suposições, tornando-o uma abordagem  cautelosa \cite{kretschmer2024review}.
 
 \subsection{Abordagens de Redes Bayesianas e Aprendizado de Máquina}
-As Redes Bayesianas Dinâmicas (DBNs) estendem as redes bayesianas para dados sequenciais, modelando a estrutura causal como um processo que se repete ao longo do tempo. Esse formalismo permite a incorporação de conhecimento prévio (priors) e a quantificação da incerteza sobre a estrutura do grafo. Ferramentas como o pacote \texttt{dbnlearn} têm se popularizando para aprender DBNs e melhorar a previsão em dinâmicas temporais \cite{dbnlearn2023}.
+As Redes Bayesianas Dinâmicas (DBNs) estendem as redes bayesianas para dados sequenciais, modelando a estrutura causal como um processo que se repete ao longo do tempo. Esse formalismo permite a incorporação de conhecimento prévio (priors) e a quantificação da incerteza sobre a estrutura do grafo.
+% TODO: verificar detalhes bibliográficos do dbnlearn (SoftwareX vol.24, art.101569) antes de reativar.
+% Ferramentas como o pacote \texttt{dbnlearn} têm se popularizando para aprender DBNs e melhorar a previsão em dinâmicas temporais \cite{dbnlearn2023}.
 
 Mais recentemente, com o avanço do deep learning (e machine learning), surgiram métodos que utilizam redes neurais para a descoberta causal. O TCDF (Temporal Causal Discovery Framework) usa redes neurais convolucionais e mecanismos de atenção para aprender um grafo causal diretamente dos dados \cite{nauta2019}. Outras arquiteturas, como NAVAR e TS-CausalNN, também empregam redes neurais para modelar relações não lineares complexas \cite{kretschmer2024review}. Embora essas abordagens sejam promissoras para dados de alta dimensionalidade e não ofereçam sempre as mesmas garantias teóricas que os métodos estatísticos, elas representam a vanguarda da pesquisa na área, sendo consistentemente provadas em plataformas de benchmark como a \texttt{causeMe} \cite{kretschmer2024review}.
 
@@ -809,13 +811,6 @@ Os dados macroeconômicos são provenientes do Federal Reserve Bank of St. Louis
 \begin{thebibliography}{99}
 
 
-\bibitem{alquier2016}
-Alquier, P., Ridgway, J., \& Chopin, N. (2016).
-On the properties of variational approximations of Gibbs posteriors.
-\textit{Journal of Machine Learning Research}, 17(239), 1--41.
-
-
-
 \bibitem{granger1969}
 Granger, C. W. J. (1969). Investigating causal relations by econometric models and cross-spectral methods. \textit{Econometrica}, 37(3), 424--438.
 
@@ -858,23 +853,14 @@ Shimizu, S., Hoyer, P. O., Hyvärinen, A., \& Kerminen, A. (2006). A linear non-
 \bibitem{peters2013}
 Peters, J., Janzing, D., \& Schölkopf, B. (2013). Causal inference on time series using restricted structural equation models. In \textit{Advances in Neural Information Processing Systems (NIPS)} 26.
 
-\bibitem{dbnlearn2023}
-Fernandes, R. P., \& Nedjah, N. (2023). dbnlearn: An R package for learning the structure of dynamic Bayesian networks. \textit{SoftwareX}, 24, 101569.
+% TODO: verificar vol./artigo no site da SoftwareX antes de reativar.
+% \bibitem{dbnlearn2023}
+% Fernandes, R. P., \& Nedjah, N. (2023). dbnlearn: An R package for learning the structure of dynamic Bayesian networks. \textit{SoftwareX}, 24, 101569.
 
 \bibitem{nauta2019}
 Nauta, M., Bucur, D., \& Seifert, C. (2019). Causal discovery with attention-based convolutional neural networks. \textit{Machine Learning and Knowledge Extraction}, 1(1), 312--340.
 
 
-
-\bibitem{kargar2022}
-Kargar, K., \& Iwata, T. (2022).
-\textit{Comparison of Lasso Granger and PCMCI for Causal Discovery in Time Series Data}.
-The University of Arizona. \url{https://repository.arizona.edu/handle/10150/665005}
-
-\bibitem{peters2017}
-Peters, J., Janzing, D., \& Schölkopf, B. (2017).
-\textit{Elements of Causal Inference: Foundations and Learning Algorithms}.
-The MIT Press.
 
 \bibitem{pearl2009}
 Pearl, J. (2009).
@@ -933,21 +919,6 @@ A new framework for water quality forecasting coupling causal inference, time-fr
 Li, L., Dai, Y., Shangguan, W., Wei, Z., Wei, N., \& Li, Q. (2022).
 Causality-structured deep learning for soil moisture predictions.
 \textit{Journal of Hydrometeorology}, 23(8), 1315--1331. \url{https://doi.org/10.1175/JHM-D-21-0206.1}
-
-\bibitem{castle2020}
-Kyono, T., Zhang, Y., \& van der Schaar, M. (2020).
-CASTLE: Regularization via Auxiliary Causal Graph Discovery.
-In \textit{Advances in Neural Information Processing Systems (NeurIPS)}, 33.
-
-\bibitem{zhu2026supply}
-Zhu, H., \& Liu, X. (2026).
-Hybrid graph attention network-LSTM models for causal-aware supply chain forecasting.
-\textit{Journal of Intelligent Manufacturing}. \url{https://doi.org/10.1007/s10845-025-02782-3}
-
-\bibitem{kong2025hydro}
-Kong, X., et al. (2025).
-A combined prediction model for middle and long-term water and sediment forecasting based on causal analysis feature selection.
-\textit{Journal of Hydrology: Regional Studies}, 60, 102464.
 
 \end{thebibliography}
 
