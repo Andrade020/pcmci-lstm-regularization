@@ -9,7 +9,7 @@ dist/
 build/
 .pytest_cache/
 .mypy_cache/
-
+.claude/
 # ── Virtual environments ───────────────────────────────────────────────────────
 venv/
 env/
