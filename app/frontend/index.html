@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Causal Forecasting — PCMCI + LSTM</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Causal Forecasting</h1>
+    <p class="sub">Plug in a multivariate time series → discover a causal graph (PCMCI) →
+       forecast with a causal-regularized LSTM → compare against strong baselines with
+       Diebold–Mariano significance.</p>
+  </header>
+
+  <main>
+    <section class="panel" id="config-panel">
+      <h2>1 · Choose data</h2>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="example">Example dataset</button>
+        <button class="tab" data-tab="upload">Upload CSV</button>
+      </div>
+
+      <div class="tab-body" id="tab-example">
+        <label>Dataset
+          <select id="dataset"></select>
+        </label>
+        <p class="hint" id="dataset-desc"></p>
+      </div>
+
+      <div class="tab-body hidden" id="tab-upload">
+        <label>Wide CSV (datetime index + one column per series)
+          <input type="file" id="csvfile" accept=".csv">
+        </label>
+        <label>Stationarize
+          <select id="transform">
+            <option value="">none</option>
+            <option value="diff">first difference</option>
+            <option value="log_diff">log difference</option>
+          </select>
+        </label>
+      </div>
+
+      <h2>2 · Parameters</h2>
+      <div class="grid">
+        <label>Window L <input type="number" id="window" value="5"></label>
+        <label>τ_max <input type="number" id="tau_max" value="5"></label>
+        <label>PCMCI α <input type="number" id="alpha" value="0.05" step="0.01"></label>
+        <label>Hidden <input type="number" id="hidden" value="32"></label>
+        <label>Epochs <input type="number" id="epochs" value="80"></label>
+        <label>Layers <input type="number" id="num_layers" value="2"></label>
+      </div>
+      <p class="hint">Tip: keep <b>window ≈ τ_max</b> — the paper shows hard masking degrades
+        badly when τ_max &lt; window.</p>
+
+      <button id="run-btn" class="primary">Run pipeline</button>
+      <div id="status" class="status hidden">
+        <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+        <span id="status-msg"></span>
+      </div>
+    </section>
+
+    <section class="panel hidden" id="results-panel">
+      <h2>Results <span id="results-meta" class="meta"></span></h2>
+
+      <div id="f1-box" class="hidden callout"></div>
+
+      <h3>Model comparison (Diebold–Mariano vs LSTM baseline)</h3>
+      <div class="table-wrap"><table id="metrics-table"></table></div>
+      <p class="hint">DM &gt; 0 ⇒ model beats the LSTM baseline. Stars: ** p&lt;0.05, * p&lt;0.10.
+         The random-graph rows are ablations — they should <i>not</i> win if the causal
+         structure is the active ingredient.</p>
+
+      <h3>Causal graph</h3>
+      <div class="figrow">
+        <img id="fig-heatmap" alt="causal graph heatmap">
+        <img id="fig-network" alt="causal network">
+      </div>
+
+      <h3>Forecasts</h3>
+      <img id="fig-forecast" class="wide" alt="forecasts">
+
+      <h3>Training history</h3>
+      <img id="fig-history" class="wide" alt="training history">
+    </section>
+  </main>
+
+  <footer>
+    <p>Research artifact. Built on the paper's <code>src/</code> library (PCMCI via Tigramite +
+       causal-regularized LSTM). One-step-ahead multivariate forecasting.</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+dataset,causal_model,baseline,dm,p,causal_better
+var4,LSTM Causal (PCMCI),Random Walk,2.718,0.0066,1
+var4,LSTM Causal (PCMCI),VAR,-9.776,0.0,0
+var4,LSTM Causal (PCMCI),LSTM Baseline,-0.223,0.8237,0
+var4,LSTM Causal (PCMCI),LSTM-L2,0.444,0.657,0
+var4,LSTM Masked (PCMCI),Random Walk,-0.475,0.6348,0
+var4,LSTM Masked (PCMCI),VAR,-11.597,0.0,0
+var4,LSTM Masked (PCMCI),LSTM Baseline,-5.036,0.0,0
+var4,LSTM Masked (PCMCI),LSTM-L2,-4.967,0.0,0
+var8,LSTM Causal (PCMCI),Random Walk,-42.651,0.0,0
+var8,LSTM Causal (PCMCI),VAR,-42.771,0.0,0
+var8,LSTM Causal (PCMCI),LSTM Baseline,-31.537,0.0,0
+var8,LSTM Causal (PCMCI),LSTM-L2,-33.494,0.0,0
+var8,LSTM Masked (PCMCI),Random Walk,-42.436,0.0,0
+var8,LSTM Masked (PCMCI),VAR,-42.628,0.0,0
+var8,LSTM Masked (PCMCI),LSTM Baseline,40.096,0.0,1
+var8,LSTM Masked (PCMCI),LSTM-L2,38.982,0.0,1
+threshold4,LSTM Causal (PCMCI),Random Walk,3.151,0.0017,1
+threshold4,LSTM Causal (PCMCI),VAR,-7.295,0.0,0
+threshold4,LSTM Causal (PCMCI),LSTM Baseline,-3.976,0.0001,0
+threshold4,LSTM Causal (PCMCI),LSTM-L2,-4.299,0.0,0
+threshold4,LSTM Masked (PCMCI),Random Walk,4.565,0.0,1
+threshold4,LSTM Masked (PCMCI),VAR,-5.446,0.0,0
+threshold4,LSTM Masked (PCMCI),LSTM Baseline,0.364,0.7162,0
+threshold4,LSTM Masked (PCMCI),LSTM-L2,0.049,0.9612,0
+lorenz96,LSTM Causal (PCMCI),Random Walk,23.879,0.0,1
+lorenz96,LSTM Causal (PCMCI),VAR,16.794,0.0,1
+lorenz96,LSTM Causal (PCMCI),LSTM Baseline,0.833,0.4049,0
+lorenz96,LSTM Causal (PCMCI),LSTM-L2,1.236,0.2165,0
+lorenz96,LSTM Masked (PCMCI),Random Walk,23.884,0.0,1
+lorenz96,LSTM Masked (PCMCI),VAR,16.915,0.0,1
+lorenz96,LSTM Masked (PCMCI),LSTM Baseline,1.756,0.0792,0
+lorenz96,LSTM Masked (PCMCI),LSTM-L2,2.118,0.0343,1
+kuramoto,LSTM Causal (PCMCI),Random Walk,61.902,0.0,1
+kuramoto,LSTM Causal (PCMCI),VAR,-32.282,0.0,0
+kuramoto,LSTM Causal (PCMCI),LSTM Baseline,19.119,0.0,1
+kuramoto,LSTM Causal (PCMCI),LSTM-L2,44.279,0.0,1
+kuramoto,LSTM Masked (PCMCI),Random Walk,62.293,0.0,1
+kuramoto,LSTM Masked (PCMCI),VAR,-31.66,0.0,0
+kuramoto,LSTM Masked (PCMCI),LSTM Baseline,24.355,0.0,1
+kuramoto,LSTM Masked (PCMCI),LSTM-L2,47.67,0.0,1
+netsim,LSTM Causal (PCMCI),Random Walk,3.554,0.0004,1
+netsim,LSTM Causal (PCMCI),VAR,-7.218,0.0,0
+netsim,LSTM Causal (PCMCI),LSTM Baseline,-2.831,0.0047,0
+netsim,LSTM Causal (PCMCI),LSTM-L2,-3.163,0.0016,0
+netsim,LSTM Masked (PCMCI),Random Walk,3.847,0.0001,1
+netsim,LSTM Masked (PCMCI),VAR,-7.018,0.0,0
+netsim,LSTM Masked (PCMCI),LSTM Baseline,-2.389,0.0171,0
+netsim,LSTM Masked (PCMCI),LSTM-L2,-2.807,0.0051,0
+climate,LSTM Causal (PCMCI),Random Walk,1.95,0.0515,0
+climate,LSTM Causal (PCMCI),VAR,-5.947,0.0,0
+climate,LSTM Causal (PCMCI),LSTM Baseline,1.195,0.2323,0
+climate,LSTM Causal (PCMCI),LSTM-L2,0.023,0.982,0
+climate,LSTM Masked (PCMCI),Random Walk,2.877,0.0041,1
+climate,LSTM Masked (PCMCI),VAR,-5.634,0.0,0
+climate,LSTM Masked (PCMCI),LSTM Baseline,3.03,0.0025,1
+climate,LSTM Masked (PCMCI),LSTM-L2,1.859,0.0634,0
+climate_ext,LSTM Causal (PCMCI),Random Walk,3.594,0.0003,1
+climate_ext,LSTM Causal (PCMCI),VAR,-5.14,0.0,0
+climate_ext,LSTM Causal (PCMCI),LSTM Baseline,4.618,0.0,1
+climate_ext,LSTM Causal (PCMCI),LSTM-L2,2.515,0.0121,1
+climate_ext,LSTM Masked (PCMCI),Random Walk,3.398,0.0007,1
+climate_ext,LSTM Masked (PCMCI),VAR,-5.762,0.0,0
+climate_ext,LSTM Masked (PCMCI),LSTM Baseline,3.641,0.0003,1
+climate_ext,LSTM Masked (PCMCI),LSTM-L2,1.721,0.0855,0

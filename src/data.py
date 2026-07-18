@@ -137,6 +137,78 @@ def load_fred_data(
     return raw, transformed
 
 
+def stationarize(df: pd.DataFrame, method=None) -> pd.DataFrame:
+    """
+    Apply a stationarizing transform to a wide dataframe of series.
+
+    Factored from the per-column logic in `load_fred_monthly` so the app,
+    the benchmark harness, and the experiments share one implementation.
+
+    Args:
+        df: wide dataframe (datetime index, one numeric column per series).
+        method: how to transform, one of
+                  None / "none"  — return the data unchanged (drop NaN only),
+                  "log_diff"     — first difference of the log (growth rates),
+                  "diff"         — first difference (levels),
+                  dict           — {column: "log_diff"|"diff"|"none"} per column.
+
+    Returns:
+        transformed dataframe with initial NaN rows dropped.
+    """
+    if method is None or method == "none":
+        return df.dropna()
+
+    if isinstance(method, dict):
+        cols = {}
+        for col in df.columns:
+            tf = method.get(col, "none")
+            if tf == "log_diff":
+                cols[col] = np.log(df[col]).diff()
+            elif tf == "diff":
+                cols[col] = df[col].diff()
+            elif tf == "none":
+                cols[col] = df[col]
+            else:
+                raise ValueError(f"Unknown transform '{tf}' for column '{col}'")
+        return pd.DataFrame(cols, index=df.index).dropna()
+
+    if method == "log_diff":
+        return np.log(df).diff().dropna()
+    elif method == "diff":
+        return df.diff().dropna()
+    raise ValueError(f"Unknown transform: {method}")
+
+
+def load_wide_csv(
+    path: str,
+    transform=None,
+    index_col: int = 0,
+) -> tuple[pd.DataFrame, np.ndarray, list]:
+    """
+    Load a generic wide-format CSV for the causal forecasting pipeline.
+
+    The CSV is expected to have a datetime index column followed by one numeric
+    column per series (the same layout as the bundled climate CSVs, but with
+    N series columns). Rows with any missing value are dropped.
+
+    Args:
+        path: path to the CSV file.
+        transform: optional stationarizing transform passed to `stationarize`
+                   (None, "log_diff", "diff", or a per-column dict).
+        index_col: index column position (default 0).
+
+    Returns:
+        (df, array, var_names) where df is the transformed dataframe,
+        array is its (T, N) float32 values, and var_names are the column names.
+    """
+    df = pd.read_csv(path, index_col=index_col, parse_dates=True)
+    df = df.apply(pd.to_numeric, errors="coerce")
+    df = stationarize(df, transform)
+    var_names = list(df.columns)
+    array = df.values.astype(np.float32)
+    return df, array, var_names
+
+
 def generate_var_series(
     A: np.ndarray,
     n_steps: int,

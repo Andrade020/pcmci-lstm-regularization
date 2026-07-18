@@ -1,0 +1,7 @@
+# App-only dependencies (in addition to the project root requirements.txt,
+# which provides torch, tigramite, pandas, numpy, scikit-learn, statsmodels,
+# matplotlib). Install both:
+#     pip install -r requirements.txt -r app/requirements-app.txt
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
