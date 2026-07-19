@@ -1,97 +1,107 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Causal Forecasting — PCMCI + LSTM</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <header>
-    <h1>Causal Forecasting</h1>
-    <p class="sub">Plug in a multivariate time series → discover a causal graph (PCMCI) →
-       forecast with a causal-regularized LSTM → compare against strong baselines with
-       Diebold–Mariano significance.</p>
+    <div class="wrap">
+      <h1>Previsão Causal de Séries Temporais</h1>
+      <p class="sub">Plugue seus dados → o <b>PCMCI</b> descobre um grafo causal →
+        uma <b>LSTM regularizada por causalidade</b> prevê → compare com baselines
+        fortes e veja, com significância estatística, se a causalidade ajudou.</p>
+    </div>
   </header>
 
-  <main>
-    <section class="panel" id="config-panel">
-      <h2>1 · Choose data</h2>
-
+  <main class="wrap">
+    <!-- STEP 1 : DATA -->
+    <section class="card">
+      <h2><span class="step">1</span> Escolha os dados</h2>
       <div class="tabs">
-        <button class="tab active" data-tab="example">Example dataset</button>
-        <button class="tab" data-tab="upload">Upload CSV</button>
+        <button class="tab active" data-tab="example">Exemplo</button>
+        <button class="tab" data-tab="upload">Enviar CSV</button>
       </div>
 
       <div class="tab-body" id="tab-example">
-        <label>Dataset
+        <label class="field">Conjunto de dados
           <select id="dataset"></select>
         </label>
         <p class="hint" id="dataset-desc"></p>
       </div>
 
       <div class="tab-body hidden" id="tab-upload">
-        <label>Wide CSV (datetime index + one column per series)
+        <label class="field">CSV largo (1ª coluna = data/índice, demais = séries)
           <input type="file" id="csvfile" accept=".csv">
         </label>
-        <label>Stationarize
+        <label class="field">Estacionarizar
           <select id="transform">
-            <option value="">none</option>
-            <option value="diff">first difference</option>
-            <option value="log_diff">log difference</option>
+            <option value="">nenhum</option>
+            <option value="diff">1ª diferença</option>
+            <option value="log_diff">log-diferença</option>
           </select>
         </label>
+        <a class="ghost-link" href="/api/example.csv" download>baixar CSV de exemplo</a>
       </div>
 
-      <h2>2 · Parameters</h2>
+      <div id="preview" class="preview hidden">
+        <div class="preview-head">
+          <span id="preview-summary" class="summary"></span>
+        </div>
+        <div id="preview-chart"></div>
+      </div>
+    </section>
+
+    <!-- STEP 2 : PARAMS -->
+    <section class="card">
+      <h2><span class="step">2</span> Parâmetros</h2>
       <div class="grid">
-        <label>Window L <input type="number" id="window" value="5"></label>
-        <label>τ_max <input type="number" id="tau_max" value="5"></label>
-        <label>PCMCI α <input type="number" id="alpha" value="0.05" step="0.01"></label>
-        <label>Hidden <input type="number" id="hidden" value="32"></label>
-        <label>Epochs <input type="number" id="epochs" value="80"></label>
-        <label>Layers <input type="number" id="num_layers" value="2"></label>
+        <label class="field small">Janela L <input type="number" id="window" value="5"></label>
+        <label class="field small">τ_max <input type="number" id="tau_max" value="5"></label>
+        <label class="field small">PCMCI α <input type="number" id="alpha" value="0.05" step="0.01"></label>
+        <label class="field small">Neurônios <input type="number" id="hidden" value="32"></label>
+        <label class="field small">Épocas <input type="number" id="epochs" value="60"></label>
+        <label class="field small">Camadas <input type="number" id="num_layers" value="2"></label>
       </div>
-      <p class="hint">Tip: keep <b>window ≈ τ_max</b> — the paper shows hard masking degrades
-        badly when τ_max &lt; window.</p>
-
-      <button id="run-btn" class="primary">Run pipeline</button>
+      <p class="hint">Dica: mantenha <b>Janela ≈ τ_max</b>. Menos épocas = mais rápido
+        (o treino roda em CPU e leva alguns minutos).</p>
+      <button id="run-btn" class="primary">▶ Rodar</button>
       <div id="status" class="status hidden">
         <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
         <span id="status-msg"></span>
       </div>
     </section>
 
-    <section class="panel hidden" id="results-panel">
-      <h2>Results <span id="results-meta" class="meta"></span></h2>
+    <!-- RESULTS -->
+    <section id="results" class="card hidden">
+      <h2><span class="step">✓</span> Resultados <span id="results-meta" class="summary"></span></h2>
 
-      <div id="f1-box" class="hidden callout"></div>
+      <h3>Existe estrutura causal?</h3>
+      <div id="verdict" class="verdict"></div>
 
-      <h3>Model comparison (Diebold–Mariano vs LSTM baseline)</h3>
+      <h3>Grafo causal descoberto (PCMCI)</h3>
+      <p class="hint">Cada seta <b>i → j</b> = a variável i ajuda a causar a j (em algum atraso).
+        Passe o mouse sobre um nó para destacar suas conexões.</p>
+      <div id="graph" class="graph"></div>
+
+      <h3>Previsões no conjunto de teste</h3>
+      <div id="forecast-legend" class="legend"></div>
+      <div id="forecast" class="multiples"></div>
+
+      <h3>Comparação de modelos</h3>
+      <p class="hint">DM &gt; 0 (verde) = o modelo supera a LSTM baseline. ** p&lt;0,05, * p&lt;0,10.
+        Linhas "(aleatório)" são controles: não deveriam vencer se a causalidade é o ingrediente ativo.</p>
       <div class="table-wrap"><table id="metrics-table"></table></div>
-      <p class="hint">DM &gt; 0 ⇒ model beats the LSTM baseline. Stars: ** p&lt;0.05, * p&lt;0.10.
-         The random-graph rows are ablations — they should <i>not</i> win if the causal
-         structure is the active ingredient.</p>
-
-      <h3>Causal graph</h3>
-      <div class="figrow">
-        <img id="fig-heatmap" alt="causal graph heatmap">
-        <img id="fig-network" alt="causal network">
-      </div>
-
-      <h3>Forecasts</h3>
-      <img id="fig-forecast" class="wide" alt="forecasts">
-
-      <h3>Training history</h3>
-      <img id="fig-history" class="wide" alt="training history">
     </section>
   </main>
 
-  <footer>
-    <p>Research artifact. Built on the paper's <code>src/</code> library (PCMCI via Tigramite +
-       causal-regularized LSTM). One-step-ahead multivariate forecasting.</p>
+  <footer class="wrap">
+    <p>Artefato de pesquisa · construído sobre a biblioteca <code>src/</code>
+      (PCMCI via Tigramite + LSTM regularizada) · previsão multivariada de 1 passo.</p>
   </footer>
 
-  <script src="/static/app.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>

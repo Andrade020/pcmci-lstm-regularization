@@ -44,11 +44,16 @@ python -m uvicorn app.backend.main:app --reload
 # open http://127.0.0.1:8000
 ```
 
-Pick an example dataset (or upload a wide CSV: a datetime index column followed
-by one numeric column per series), set the parameters, and run. Training happens
-in a background thread; the page polls for progress and then shows the causal
-graph (heatmap + network), the forecasts, the training history, and a model
-comparison table with DM significance vs the LSTM baseline.
+Pick an example dataset (or upload a wide CSV: a datetime/index column followed by
+one numeric column per series — a `Download example CSV` link is provided). The
+imported series are charted immediately. Set the parameters and run; training
+happens in a background thread and the page polls for progress. Results are drawn
+entirely with interactive SVG (no server-side images): a plain-language **verdict**
+(is there causal structure? does the graph beat a random graph? did causality
+help?), an **interactive causal graph** (hover a node to highlight its links),
+per-variable **forecast overlays** (real vs each model, with crosshair tooltips),
+and a **model-comparison table** with Diebold–Mariano significance. Colours follow
+a colorblind-validated palette.
 
 ## Run the benchmark
 
@@ -90,11 +95,10 @@ discrete-lag DAG. Read those F1 values as structural recovery, not exact scores.
 app/
   backend/
     pipeline.py   # parametrized refactor of experiments/exp_fred.py::main (the one true pipeline)
-    main.py       # FastAPI: async thread jobs, polling, static frontend
+    main.py       # FastAPI: async thread jobs, polling, JSON data + preview endpoints
     jobs.py       # thread-safe job registry (no joblib — loky+torch deadlocks on Windows)
-    figures.py    # matplotlib figures -> base64 PNG (reuses src/plotting)
     schemas.py    # pydantic request models
-  frontend/       # zero-build HTML + vanilla JS + CSS
+  frontend/       # zero-build HTML + vanilla JS (interactive SVG charts + causal graph) + CSS
   benchmark/
     datasets.py       # registry: loader + ground-truth graph + recommended config
     synthetic.py      # Lorenz-96 / Kuramoto generators (+ reused exp_synthetic ones)
