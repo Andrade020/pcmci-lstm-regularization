@@ -126,6 +126,18 @@ def _random_links(est_links, N, tau_max, seed):
     return rand
 
 
+def _var_rolling(var_mdl, history_init, y_actual_norm, n_steps, N):
+    """Rolling one-step VAR forecast, feeding the true value back each step."""
+    preds = np.zeros((n_steps, N))
+    hist = history_init.copy()
+    lag = max(1, var_mdl.lag_order)
+    for t in range(n_steps):
+        fc = var_mdl._fitted.forecast(hist[-lag:], steps=1)
+        preds[t] = fc[0]
+        hist = np.vstack([hist, y_actual_norm[t: t + 1]])
+    return preds
+
+
 def _links_to_json(links):
     """Convert {j: [(i, lag), ...]} to JSON-serializable {str(j): [[i, lag]]}."""
     return {str(j): [[int(i), int(lag)] for (i, lag) in lst]
@@ -135,7 +147,7 @@ def _links_to_json(links):
 # ── Main entry point ─────────────────────────────────────────────────────────
 
 def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
-                 pcmci_links=None):
+                 pcmci_links=None, eval_val=False):
     """
     Run the full causal-forecasting comparison on a (T, N) array.
 
@@ -191,6 +203,9 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
     y_true_norm = test_norm[window:]
     y_true_orig = scaler.inverse_transform(y_true_norm)
 
+    T_val_eff = len(val_norm) - window
+    y_true_val_orig = scaler.inverse_transform(val_norm[window:])
+
     report("PCMCI causal discovery", 0.05)
 
     # ── PCMCI (or precomputed links) ────────────────────────────────────────────
@@ -215,6 +230,7 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
     preds = {}           # name -> (T_test, N) original-scale predictions
     metrics = {}         # name -> metrics dict
     history = {}         # name -> training history (LSTM models only)
+    lstm_objs = {}       # name -> trained torch model (for optional val eval)
     which = set(cfg["models"])
 
     # ── Random Walk ─────────────────────────────────────────────────────────────
@@ -230,15 +246,8 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
         report("VAR(BIC) baseline", 0.15)
         var_mdl = VARBaseline(maxlags=cfg["tau_max"], ic="bic")
         var_mdl.fit(train_norm)
-        val_actuals_norm = val_norm[window:]
-        history_to_test = np.vstack([train_norm, val_actuals_norm])
-        preds_var = np.zeros((T_test_eff, N))
-        hist = history_to_test.copy()
-        lag = max(1, var_mdl.lag_order)
-        for t in range(T_test_eff):
-            fc = var_mdl._fitted.forecast(hist[-lag:], steps=1)
-            preds_var[t] = fc[0]
-            hist = np.vstack([hist, y_true_norm[t: t + 1]])
+        history_to_test = np.vstack([train_norm, val_norm[window:]])
+        preds_var = _var_rolling(var_mdl, history_to_test, y_true_norm, T_test_eff, N)
         p = scaler.inverse_transform(preds_var)
         preds["VAR"] = p
         metrics["VAR"] = compute_metrics(y_true_orig, p)
@@ -253,6 +262,7 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
     preds["LSTM Baseline"] = p_base
     metrics["LSTM Baseline"] = compute_metrics(y_true_orig, p_base)
     history["LSTM Baseline"] = h_base
+    lstm_objs["LSTM Baseline"] = baseline
     e_base = y_true_orig - p_base
 
     # ── LSTM-L2 (weight decay, lambda on val) ──────────────────────────────────
@@ -267,6 +277,7 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
         p = scaler.inverse_transform(predict_one_step(lstm_l2, test_dl, dev)[0])
         preds["LSTM-L2"] = p
         metrics["LSTM-L2"] = compute_metrics(y_true_orig, p)
+        lstm_objs["LSTM-L2"] = lstm_l2
     else:
         best_lam_l2 = None
 
@@ -283,6 +294,7 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
         preds["LSTM Causal (PCMCI)"] = p
         metrics["LSTM Causal (PCMCI)"] = compute_metrics(y_true_orig, p)
         history["LSTM Causal (PCMCI)"] = h_causal
+        lstm_objs["LSTM Causal (PCMCI)"] = causal
 
     # ── Causal LSTM (random-graph ablation) ────────────────────────────────────
     if "causal_random" in which and best_lam_c is not None:
@@ -295,6 +307,7 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
         p = scaler.inverse_transform(predict_one_step(crand, test_dl, dev)[0])
         preds["LSTM Causal (Random)"] = p
         metrics["LSTM Causal (Random)"] = compute_metrics(y_true_orig, p)
+        lstm_objs["LSTM Causal (Random)"] = crand
 
     # ── Masked LSTM (hard mask, no lambda) ─────────────────────────────────────
     if "masked" in which:
@@ -307,6 +320,7 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
         preds["LSTM Masked (PCMCI)"] = p
         metrics["LSTM Masked (PCMCI)"] = compute_metrics(y_true_orig, p)
         history["LSTM Masked (PCMCI)"] = h_masked
+        lstm_objs["LSTM Masked (PCMCI)"] = masked
 
     # ── Masked LSTM (random-graph ablation) ────────────────────────────────────
     if "masked_random" in which:
@@ -342,6 +356,25 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
         for vn in var_names:
             per_var[vn][name] = pv[vn]["mae"]
 
+    # ── Optional: evaluate every model on the VALIDATION set too ────────────────
+    # This is what enables the ex-ante question: does the model that wins on
+    # validation also win on test? (i.e. can you pick the right model in advance?)
+    val_models = None
+    if eval_val:
+        report("Validation evaluation", 0.97)
+        val_metrics = {}
+        for name, m in lstm_objs.items():
+            vp = scaler.inverse_transform(predict_one_step(m, val_dl, dev)[0])
+            val_metrics[name] = compute_metrics(y_true_val_orig, vp)
+        if "rw" in which and "Random Walk" in preds:
+            vp = scaler.inverse_transform(rw.predict(val_norm, window))
+            val_metrics["Random Walk"] = compute_metrics(y_true_val_orig, vp)
+        if "var" in which and "VAR" in preds:
+            vp = _var_rolling(var_mdl, train_norm, val_norm[window:], T_val_eff, N)
+            val_metrics["VAR"] = compute_metrics(y_true_val_orig,
+                                                 scaler.inverse_transform(vp))
+        val_models = val_metrics
+
     report("Done", 1.0)
 
     return {
@@ -358,6 +391,7 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
         "best_lambda_causal": best_lam_c,
         "best_lambda_l2": best_lam_l2,
         "models": metrics,
+        "val_models": val_models,
         "per_var": per_var,
         "history": history,
         "_arrays": {"y_true": y_true_orig, "preds": preds},

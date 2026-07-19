@@ -137,3 +137,32 @@ tuned VAR and it is beaten (DM −5.95 on climate). This is a legitimate, honest
 Reproduce: `python -m app.benchmark.run_benchmark` (regenerate just the verdict
 from the committed CSVs with `python -m app.benchmark.report`).
 
+## Ex-ante decidability
+
+Follow-up question: *can you tell in advance — without ground truth — whether the
+causal LSTM will help, using only a validation split?* `exante.py` scores every
+model on both validation and test and checks whether the validation ranking
+predicts the test ranking. Full detail in
+[`benchmark/results/exante_report.md`](benchmark/results/exante_report.md).
+
+| | Validation predicts test? |
+|---|---|
+| Core causal-vs-baseline call | correct **13/16** (81%) |
+| Val-best LSTM == test-best (stationary/simulated) | **6/6**, regret 0 |
+| Val-best LSTM == test-best (real climate) | **0/2**, regret ~4–5% |
+| Val-best model incl. VAR == test-best | **8/8** |
+
+**Answer: mostly yes, with a caveat.** On stationary/simulated data, validation
+is a perfect ex-ante guide — pick the validation winner and you get the test
+winner, no need to know F1. On **real climate** data it misfires on the
+causal-vs-baseline call (non-stationarity: the validation period doesn't
+represent the test period), so a single split is not enough there — use
+walk-forward CV. Two ex-ante safety nets: always include VAR in the candidate set
+(validation then nails the overall winner 8/8), and use the random-graph control
+on validation as a ground-truth-free red flag.
+
+Reproduce: `python -m app.benchmark.exante` (each dataset is cached to
+`results/exante_cache.jsonl`, so the run resumes if interrupted). The committed
+ex-ante numbers use lighter training settings than the headline benchmark
+(fewer epochs, single λ) — they probe ranking stability, not absolute error.
+

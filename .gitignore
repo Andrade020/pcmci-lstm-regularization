@@ -79,4 +79,5 @@ results/*.log
 app/datasets/
 # keep the committed benchmark result tables + verdict, ignore any large caches
 app/benchmark/results/*.pkl
+app/benchmark/results/*.jsonl
 app/**/__pycache__/

@@ -1,0 +1,65 @@
+dataset,group,graph_f1,model,val_mse,test_mse
+var4,synthetic,0.842,Random Walk,4.202127e-01,3.680032e-01
+var4,synthetic,0.842,VAR,2.693778e-01,2.437085e-01
+var4,synthetic,0.842,LSTM Baseline,5.567356e-01,3.782418e-01
+var4,synthetic,0.842,LSTM-L2,5.615383e-01,3.849575e-01
+var4,synthetic,0.842,LSTM Causal (PCMCI),5.834394e-01,3.848417e-01
+var4,synthetic,0.842,LSTM Causal (Random),6.043854e-01,3.985505e-01
+var4,synthetic,0.842,LSTM Masked (PCMCI),7.112618e-01,4.718493e-01
+var4,synthetic,0.842,LSTM Masked (Random),nan,4.599315e-01
+var8,synthetic,0.364,Random Walk,1.142148e-01,1.137049e-01
+var8,synthetic,0.364,VAR,9.111821e-02,9.146189e-02
+var8,synthetic,0.364,LSTM Baseline,5.402491e+00,9.144116e+00
+var8,synthetic,0.364,LSTM-L2,5.337475e+00,9.054503e+00
+var8,synthetic,0.364,LSTM Causal (PCMCI),4.934897e+00,8.417218e+00
+var8,synthetic,0.364,LSTM Causal (Random),5.687511e+00,9.604742e+00
+var8,synthetic,0.364,LSTM Masked (PCMCI),5.135174e+00,8.758386e+00
+var8,synthetic,0.364,LSTM Masked (Random),nan,9.167394e+00
+threshold4,synthetic,0.8,Random Walk,4.268667e-01,3.804334e-01
+threshold4,synthetic,0.8,VAR,2.828488e-01,2.633238e-01
+threshold4,synthetic,0.8,LSTM Baseline,5.002462e-01,4.157831e-01
+threshold4,synthetic,0.8,LSTM-L2,4.991515e-01,4.159750e-01
+threshold4,synthetic,0.8,LSTM Causal (PCMCI),4.757020e-01,3.939933e-01
+threshold4,synthetic,0.8,LSTM Causal (Random),5.133357e-01,4.432352e-01
+threshold4,synthetic,0.8,LSTM Masked (PCMCI),4.719613e-01,3.872712e-01
+threshold4,synthetic,0.8,LSTM Masked (Random),nan,4.921117e-01
+lorenz96,chaotic,0.25,Random Walk,4.143338e+00,4.311907e+00
+lorenz96,chaotic,0.25,VAR,7.222061e-01,7.307856e-01
+lorenz96,chaotic,0.25,LSTM Baseline,5.166708e-01,4.948126e-01
+lorenz96,chaotic,0.25,LSTM-L2,5.231525e-01,5.065371e-01
+lorenz96,chaotic,0.25,LSTM Causal (PCMCI),5.520114e-01,5.231960e-01
+lorenz96,chaotic,0.25,LSTM Causal (Random),7.255130e-01,6.948372e-01
+lorenz96,chaotic,0.25,LSTM Masked (PCMCI),5.034864e-01,4.801912e-01
+lorenz96,chaotic,0.25,LSTM Masked (Random),nan,4.801912e-01
+kuramoto,chaotic,0.412,Random Walk,5.253428e-03,5.271037e-03
+kuramoto,chaotic,0.412,VAR,1.070676e-15,1.045491e-15
+kuramoto,chaotic,0.412,LSTM Baseline,9.811416e-05,9.727242e-05
+kuramoto,chaotic,0.412,LSTM-L2,1.102441e-04,1.054953e-04
+kuramoto,chaotic,0.412,LSTM Causal (PCMCI),7.945455e-04,8.383743e-04
+kuramoto,chaotic,0.412,LSTM Causal (Random),1.661904e-03,1.745921e-03
+kuramoto,chaotic,0.412,LSTM Masked (PCMCI),1.034676e-04,1.067009e-04
+kuramoto,chaotic,0.412,LSTM Masked (Random),nan,1.627020e-04
+netsim,physiology,0.588,Random Walk,5.422899e-02,5.312713e-02
+netsim,physiology,0.588,VAR,3.405195e-02,3.489714e-02
+netsim,physiology,0.588,LSTM Baseline,5.343927e-02,5.978159e-02
+netsim,physiology,0.588,LSTM-L2,5.376466e-02,5.975557e-02
+netsim,physiology,0.588,LSTM Causal (PCMCI),5.371442e-02,5.851257e-02
+netsim,physiology,0.588,LSTM Causal (Random),6.070722e-02,6.734098e-02
+netsim,physiology,0.588,LSTM Masked (PCMCI),5.074716e-02,5.681095e-02
+netsim,physiology,0.588,LSTM Masked (Random),nan,6.921899e-02
+climate,climate,,Random Walk,7.435108e-01,7.654317e-01
+climate,climate,,VAR,4.793292e-01,5.154403e-01
+climate,climate,,LSTM Baseline,6.059716e-01,7.114679e-01
+climate,climate,,LSTM-L2,6.047984e-01,7.107709e-01
+climate,climate,,LSTM Causal (PCMCI),6.130553e-01,7.554073e-01
+climate,climate,,LSTM Causal (Random),6.261783e-01,7.441067e-01
+climate,climate,,LSTM Masked (PCMCI),5.891289e-01,7.406767e-01
+climate,climate,,LSTM Masked (Random),nan,7.311473e-01
+climate_ext,climate,,Random Walk,9.557795e-01,8.971249e-01
+climate_ext,climate,,VAR,5.891298e-01,6.039072e-01
+climate_ext,climate,,LSTM Baseline,7.317595e-01,7.973293e-01
+climate_ext,climate,,LSTM-L2,7.318343e-01,7.986746e-01
+climate_ext,climate,,LSTM Causal (PCMCI),7.639918e-01,8.370748e-01
+climate_ext,climate,,LSTM Causal (Random),7.374346e-01,8.033831e-01
+climate_ext,climate,,LSTM Masked (PCMCI),7.278640e-01,8.384247e-01
+climate_ext,climate,,LSTM Masked (Random),nan,8.279974e-01
