@@ -21,6 +21,7 @@ from .synthetic import (
 )
 from .simulate_physio import generate_netsim, netsim_true_links
 from .download_climate import load_climate_bundled, load_climate_extended
+from .causalrivers import load_causalrivers
 
 CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                          "datasets")
@@ -60,6 +61,10 @@ def _load_kuramoto():
 def _load_netsim():
     data = generate_netsim(T=1200)
     return data, [f"R{i}" for i in range(5)], netsim_true_links()
+
+
+def _load_rivers():
+    return load_causalrivers(n_vars=6)
 
 
 def _load_climate():
@@ -116,6 +121,15 @@ DATASETS = {
         "group": "physiology",
         "cfg": {"window": 5, "tau_max": 5, "hidden": 24, "epochs": 80, "lr": 1e-3,
                 "batch": 64, "train_frac": 0.60, "val_frac": 0.20},
+    },
+    "rivers": {
+        "loader": _load_rivers,
+        "description": "CausalRivers: 6 real Elbe/Jahna gauge stations — known "
+                       "upstream→downstream graph (direction certain; lag approx).",
+        "group": "rivers",
+        "cfg": {"window": 6, "tau_max": 6, "hidden": 24, "epochs": 100, "lr": 1e-3,
+                "batch": 64, "train_frac": 0.60, "val_frac": 0.20,
+                "graph_lag_agnostic": True},
     },
     "climate": {
         "loader": _load_climate,

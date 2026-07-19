@@ -55,6 +55,42 @@ per-variable **forecast overlays** (real vs each model, with crosshair tooltips)
 and a **model-comparison table** with Diebold–Mariano significance. Colours follow
 a colorblind-validated palette.
 
+## Guarding against spurious graphs (common-cause confounding)
+
+PCMCI assumes *causal sufficiency* — no unobserved common cause. Real panels often
+violate it: blood-donation series co-move through the calendar (day-of-week,
+campaigns); river gauges co-move through shared rainfall. PCMCI then paints a dense
+"everything causes everything" graph of **spurious** links. The app now does three
+things about this:
+
+1. **Automatic confounding alarm.** After each run it checks three
+   ground-truth-free red flags — a near-complete **graph density**, a **local peak
+   in the seasonal autocorrelation** (a periodic driver; a plain AR/VAR does not
+   trip it), and whether the **density-matched random graph matches PCMCI** (if it
+   does, the structure is not the active ingredient — generic shrinkage is). When
+   the signature appears, the verdict raises *"Suspeita de causa comum
+   (confundidor)"* and names the reasons.
+
+2. **Leakage-free deseasonalization.** A `deseason_period` control removes a
+   periodic driver by subtracting a seasonal mean **estimated on the training rows
+   only** (7 = weekly, 12 = monthly). On a synthetic series where four channels
+   share one weekly driver, it collapses the graph density from **0.94 → 0.31** and
+   turns the alarm off. It fixes *periodic* drivers; irregular ones (rainfall) need
+   the next tool.
+
+3. **PCMCI+ / LPCMCI.** A method selector. **LPCMCI** is built for latent
+   confounders: it marks a shared-cause edge as bidirected (`<->`) instead of
+   forcing a spurious directed link, and the app keeps only the genuine directed
+   (`-->`) edges. On the real `rivers` set, switching from PCMCI to LPCMCI/PCMCI+
+   cuts graph density from **0.58 → 0.25**; on direction-only recovery (the lag is
+   unknown), **PCMCI+ gives the best F1 (0.47)** vs PCMCI's 0.37, by pruning the
+   rainfall-driven false positives.
+
+None of this turns the app into a magic causal-discovery product — LPCMCI is slower
+and has its own assumptions, and period detection can be wrong. It is a *guided,
+honest* workflow that surfaces when **not** to trust the graph, in the same spirit
+as the paper's moderators.
+
 ## Run the benchmark
 
 ```bash
@@ -78,8 +114,14 @@ Outputs (committed under `app/benchmark/results/`):
 | `lorenz96` | chaotic | structural | Lorenz-96 ring; coupling topology as lag-1 truth. |
 | `kuramoto` | chaotic | structural | Coupled oscillators; ring neighbours as truth. |
 | `netsim` | physiology | exact | NetSim-style fMRI effective-connectivity MVAR with a known DAG. |
+| `rivers` | rivers | structural | **CausalRivers** (Stein et al. 2025): 6 real Elbe/Jahna gauge stations; upstream→downstream direction is physically certain (travel-time lag mapped to lag 1). |
 | `climate` | climate | none | 7 bundled NOAA teleconnection indices. |
 | `climate_ext` | climate | none | Bundled + downloadable extras (SOI/AMO/DMI). |
+
+The `rivers` set is a genuine real-world benchmark with a *known* causal
+direction, and — because every gauge in a basin shares the same rainfall — it also
+carries the exact common-driver confounding the app now diagnoses (below). Its
+127 MB archive is downloaded once and cached (gitignored) on first use.
 
 Generated/downloaded data is cached under `app/datasets/` (gitignored). The
 generators and the exact `var4`/`var8`/`threshold4` ground-truth links are

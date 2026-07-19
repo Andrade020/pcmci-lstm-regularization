@@ -228,6 +228,27 @@ function renderVerdict(v) {
           s: "O grafo do PCMCI não bate um grafo aleatório: a estrutura causal pode não estar ajudando." });
   }
 
+  // Automatic common-cause / confounder alarm
+  if (v.confounding_suspected) {
+    const why = (v.confounding_reasons || []).map((r) => "• " + r).join("<br>");
+    const metName = { pcmci: "PCMCI", pcmci_plus: "PCMCI+", lpcmci: "LPCMCI" }[v.method] || v.method;
+    const fix = v.method === "lpcmci"
+      ? "Já usando LPCMCI. Se o grafo continua denso, tente também <b>dessazonalizar</b> (campo período) para remover o driver comum."
+      : `Provável <b>causa comum não observada</b> (ex.: dia-da-semana, campanhas, chuva). Tente <b>dessazonalizar</b> (campo período) e/ou trocar o método para <b>LPCMCI</b>, feito para confundidor latente. Método atual: ${metName}.`;
+    rows.push({ cls: "bad", icon: "⚠", t: "Suspeita de causa comum (confundidor)",
+      s: `${why}<br><br>${fix}` });
+  } else if (v.method && v.method !== "pcmci") {
+    const metName = { pcmci_plus: "PCMCI+", lpcmci: "LPCMCI" }[v.method] || v.method;
+    rows.push({ cls: "good", icon: "✓", t: `Descoberta com ${metName}`,
+      s: v.method === "lpcmci"
+        ? "LPCMCI mantém só as ligações direcionadas genuínas; arestas de confundidor latente foram descartadas."
+        : "PCMCI+ considerou também ligações contemporâneas." });
+  }
+  if (v.deseason_period) {
+    rows.push({ cls: "good", icon: "✓", t: `Sazonalidade removida (período ${v.deseason_period})`,
+      s: "A média sazonal foi estimada só no treino e subtraída — sem vazamento." });
+  }
+
   const causalHelps = v.soft_beats_baseline || v.masked_beats_baseline;
   rows.push(causalHelps
     ? { cls: "good", icon: "✓", t: "A causalidade melhorou a previsão",
@@ -239,7 +260,7 @@ function renderVerdict(v) {
     const f1 = v.graph_f1.f1;
     rows.push({ cls: f1 >= 0.75 ? "good" : "warn", icon: f1 >= 0.75 ? "✓" : "≈",
       t: `Qualidade do grafo: F1 = ${f1.toFixed(2)}`,
-      s: `vs. grafo verdadeiro (só em dados sintéticos). O artigo recomenda usar a regularização quando F1 ≥ 0,75.` });
+      s: `vs. grafo verdadeiro (quando conhecido). O artigo recomenda usar a regularização quando F1 ≥ 0,75.` });
   }
 
   rows.push({ cls: "good", icon: "★", t: `Melhor modelo: ${v.best_model}`,
@@ -378,6 +399,7 @@ function readConfig() {
     window: +$("window").value, tau_max: +$("tau_max").value, alpha: +$("alpha").value,
     pc_alpha: 0.1, hidden: +$("hidden").value, num_layers: +$("num_layers").value,
     epochs: +$("epochs").value, lr: 1e-3, batch: 64,
+    method: $("method").value, deseason_period: +$("deseason_period").value || 0,
   };
 }
 function showStatus(msg, frac) {

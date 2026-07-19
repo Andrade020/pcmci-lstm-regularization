@@ -16,6 +16,8 @@ class RunConfig(BaseModel):
     lr: float = 5e-4
     batch: int = 32
     transform: Optional[str] = None      # None | "log_diff" | "diff"
+    method: str = "pcmci"                 # "pcmci" | "pcmci_plus" | "lpcmci"
+    deseason_period: Optional[int] = None  # int P -> remove train-only seasonal mean
 
     def to_pipeline_cfg(self) -> dict:
         return {
@@ -28,6 +30,8 @@ class RunConfig(BaseModel):
             "epochs": self.epochs,
             "lr": self.lr,
             "batch": self.batch,
+            "method": self.method,
+            "deseason_period": self.deseason_period,
         }
 
 

@@ -110,6 +110,7 @@ def _build_verdict(result):
         graph_informative = bool(m["LSTM Causal (PCMCI)"]["mse"]
                                  < m["LSTM Causal (Random)"]["mse"])
 
+    diag = result.get("diagnostics", {}) or {}
     return {
         "n_links": int(n_links),
         "has_structure": bool(n_links > 0),
@@ -118,6 +119,12 @@ def _build_verdict(result):
         "soft_beats_baseline": beats_baseline(soft),
         "masked_beats_baseline": beats_baseline(masked),
         "graph_informative": graph_informative,
+        "method": result.get("method", "pcmci"),
+        "deseason_period": result.get("deseason_period"),
+        "confounding_suspected": bool(diag.get("confounding_suspected")),
+        "confounding_reasons": diag.get("reasons", []),
+        "graph_density": diag.get("graph_density"),
+        "seasonality": diag.get("seasonality"),
     }
 
 
@@ -217,6 +224,7 @@ async def run_upload(
     hidden: int = Form(64), num_layers: int = Form(2),
     epochs: int = Form(150), lr: float = Form(5e-4), batch: int = Form(32),
     transform: str = Form(""),
+    method: str = Form("pcmci"), deseason_period: int = Form(0),
 ):
     raw = await file.read()
     try:
@@ -233,7 +241,8 @@ async def run_upload(
 
     cfg = RunConfig(window=window, tau_max=tau_max, alpha=alpha, pc_alpha=pc_alpha,
                     hidden=hidden, num_layers=num_layers, epochs=epochs,
-                    lr=lr, batch=batch).to_pipeline_cfg()
+                    lr=lr, batch=batch, method=method or "pcmci",
+                    deseason_period=(deseason_period or None)).to_pipeline_cfg()
     job = registry.create({"dataset": file.filename, "config": cfg,
                            "shape": list(data.shape)})
     registry.run_async(job, _make_target(data, var_names, cfg, None))

@@ -38,6 +38,9 @@ def default_config() -> dict:
         "alpha": 0.05,
         "pc_alpha": 0.1,
         "pcmci_test": "parcorr",
+        "method": "pcmci",          # "pcmci" | "pcmci_plus" | "lpcmci"
+        "deseason_period": None,    # int period P -> subtract train-only seasonal means
+        "graph_lag_agnostic": False,  # score graph F1 by direction only (lag unknown)
         "hidden": 64,
         "num_layers": 2,
         "dropout": 0.1,
@@ -144,6 +147,125 @@ def _links_to_json(links):
             for j, lst in links.items()}
 
 
+def _deseason_splits(train_raw, val_raw, test_raw, n_train, n_val, window, period):
+    """
+    Remove a seasonal mean of period `period`, using ONLY the training rows to
+    estimate the seasonal profile (no leakage), then subtract it from every split
+    by each row's absolute time index. Each split row keeps its true phase
+    (abs_index % period) because the splits are contiguous slices of `data`.
+    """
+    N = train_raw.shape[1]
+    train_idx = np.arange(len(train_raw))
+    val_idx = np.arange(n_train - window, n_train - window + len(val_raw))
+    test_idx = np.arange(n_train + n_val - window,
+                         n_train + n_val - window + len(test_raw))
+    phase_tr = train_idx % period
+    gmean = train_raw.mean(axis=0)
+    means = np.tile(gmean, (period, 1)).astype(np.float64)
+    for p in range(period):
+        rows = train_raw[phase_tr == p]
+        if len(rows):
+            means[p] = rows.mean(axis=0)
+
+    def sub(arr, idx):
+        return (arr - means[idx % period]).astype(np.float32)
+
+    return sub(train_raw, train_idx), sub(val_raw, val_idx), sub(test_raw, test_idx)
+
+
+def _seasonality_strength(data, min_lag=4, max_lag=None):
+    """
+    Detect a *periodic* driver: a local peak in the mean |autocorrelation| at a
+    lag >= `min_lag`. A local peak (|ACF| higher than at the neighbouring lags)
+    distinguishes a genuine seasonal spike (weekly=7, monthly=12, ...) from the
+    monotone autocorrelation decay of ordinary short-memory dynamics — an AR/VAR
+    process has high |ACF| at small lags but no bump, so it does not trip this.
+
+    `min_lag=4` skips lags 1-3: lag 1 carries the first-difference MA(1) artifact
+    and lags 2-3 are ordinary short memory, neither of which is a shared calendar
+    driver. Returns {"lag": int|None, "strength": float in [0,1]}.
+    """
+    data = np.asarray(data, dtype=np.float64)
+    T = len(data)
+    if max_lag is None:
+        max_lag = min(60, T // 3)
+    if max_lag < min_lag + 1:
+        return {"lag": None, "strength": 0.0}
+    x = data - data.mean(axis=0)
+    denom = (x * x).sum(axis=0)
+    denom[denom == 0] = 1.0
+    acf = np.array([np.abs((x[lag:] * x[:-lag]).sum(axis=0) / denom).mean()
+                    for lag in range(1, max_lag + 1)])   # acf[k] = |ACF| at lag k+1
+    best_lag, best = None, 0.0
+    for lag in range(min_lag, max_lag):        # need lag-1 and lag+1 neighbours
+        v = acf[lag - 1]
+        if v > acf[lag - 2] and v > acf[lag] and v > best:
+            best, best_lag = float(v), int(lag)
+    return {"lag": best_lag, "strength": best}
+
+
+def _diagnostics(data, est_links, N, metrics):
+    """
+    Ground-truth-free red flags for a spurious/common-driver causal graph:
+      - graph density (fraction of ordered variable pairs with any link),
+      - strongest seasonal autocorrelation (a shared periodic driver),
+      - whether the density-matched RANDOM graph does as well as PCMCI (if so,
+        the specific structure is not the active ingredient — generic shrinkage is).
+    A dense graph that a random graph matches is the signature of an unobserved
+    common cause (causal sufficiency violated), e.g. calendar/campaign effects.
+    """
+    pairs = {(i, j) for j, lst in est_links.items() for (i, _) in lst}
+    density = len(pairs) / float(N * N)
+    seas = _seasonality_strength(data)
+
+    def mse(name):
+        return metrics[name]["mse"] if name in metrics else None
+
+    base, pc, rnd = (mse("LSTM Baseline"), mse("LSTM Causal (PCMCI)"),
+                     mse("LSTM Causal (Random)"))
+    gap = None  # >0 => PCMCI graph beats the random graph (informative)
+    if pc is not None and rnd is not None and base:
+        gap = (rnd - pc) / base
+    rand_beats = None
+    r = metrics.get("LSTM Causal (Random)")
+    if r and r.get("dm_stat") is not None:
+        rand_beats = bool(r["dm_stat"] > 0 and r["p_value"] < 0.05)
+
+    dense = density >= 0.6
+    uninformative = (gap is not None and gap < 0.02) or bool(rand_beats)
+    strong_season = bool(seas["lag"]) and seas["strength"] >= 0.3
+
+    reasons = []
+    if dense:
+        reasons.append(f"grafo muito denso ({len(pairs)} de {N * N} pares ligados)")
+    if rand_beats:
+        reasons.append("um grafo aleatório de mesma densidade também vence a "
+                       "baseline — o ganho é regularização genérica, não a estrutura")
+    elif gap is not None and gap < 0.02:
+        reasons.append("o grafo do PCMCI praticamente empata com um aleatório de "
+                       "mesma densidade — a estrutura não é o ingrediente ativo")
+    if strong_season:
+        reasons.append(f"pico de periodicidade em lag {seas['lag']} "
+                       f"(autocorrelação {seas['strength']:.2f}) — provável "
+                       f"driver sazonal comum")
+
+    # Fire only on the real signature: a dense graph that a random graph matches,
+    # OR a clear periodic driver behind a non-trivial graph. Weak isolated signals
+    # (e.g. a noisy near-zero gap alone) must not trip the alarm on genuine data.
+    confounding = bool((dense and uninformative)
+                       or (strong_season and density >= 0.4))
+
+    return {
+        "graph_density": density,
+        "n_pairs": len(pairs),
+        "seasonality": seas,
+        "pcmci_vs_random_gap": gap,
+        "random_beats_baseline": rand_beats,
+        "confounding_suspected": confounding,
+        "reasons": reasons,
+    }
+
+
 # ── Main entry point ─────────────────────────────────────────────────────────
 
 def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
@@ -194,6 +316,13 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
     val_raw = data[n_train - window: n_train + n_val]
     test_raw = data[n_train + n_val - window:]
 
+    # ── Optional train-only deseasonalization (before scaling; no leakage) ──────
+    period = cfg.get("deseason_period")
+    if period and int(period) >= 2:
+        report(f"Removendo sazonalidade (período {int(period)})", 0.04)
+        train_raw, val_raw, test_raw = _deseason_splits(
+            train_raw, val_raw, test_raw, n_train, n_val, window, int(period))
+
     scaler = fit_scaler(train_raw)
     train_norm = scaler.transform(train_raw)
     val_norm = scaler.transform(val_raw)
@@ -215,13 +344,15 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
         pcmci_result = run_pcmci(
             train_norm, tau_max=cfg["tau_max"], alpha=cfg["alpha"],
             pc_alpha=cfg["pc_alpha"], test=cfg["pcmci_test"], var_names=var_names,
+            method=cfg.get("method", "pcmci"),
         )
         est_links = pcmci_result["links"]
 
     n_links = count_links(est_links)
     graph_f1 = None
     if true_links is not None:
-        graph_f1 = compare_links(true_links, est_links, N, cfg["tau_max"])
+        graph_f1 = compare_links(true_links, est_links, N, cfg["tau_max"],
+                                 lag_agnostic=cfg.get("graph_lag_agnostic", False))
 
     train_dl = _make_loader(train_norm, window, cfg["batch"])
     val_dl = _make_loader(val_norm, window, cfg["batch"])
@@ -356,6 +487,11 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
         for vn in var_names:
             per_var[vn][name] = pv[vn]["mae"]
 
+    # ── Ground-truth-free confounding diagnostics ──────────────────────────────
+    # Computed on train_norm (exactly what PCMCI saw), so if deseasonalization was
+    # applied the seasonal red flag correctly drops.
+    diagnostics = _diagnostics(train_norm, est_links, N, metrics)
+
     # ── Optional: evaluate every model on the VALIDATION set too ────────────────
     # This is what enables the ex-ante question: does the model that wins on
     # validation also win on test? (i.e. can you pick the right model in advance?)
@@ -387,6 +523,9 @@ def run_pipeline(data, var_names, cfg=None, true_links=None, progress=None,
         "links": _links_to_json(est_links),
         "n_links": int(n_links),
         "graph_f1": graph_f1,
+        "diagnostics": diagnostics,
+        "method": cfg.get("method", "pcmci"),
+        "deseason_period": int(period) if period and int(period) >= 2 else None,
         "tau_max": cfg["tau_max"],
         "best_lambda_causal": best_lam_c,
         "best_lambda_l2": best_lam_l2,

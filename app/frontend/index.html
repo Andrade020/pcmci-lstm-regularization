@@ -64,9 +64,21 @@
         <label class="field small">Neurônios <input type="number" id="hidden" value="32"></label>
         <label class="field small">Épocas <input type="number" id="epochs" value="60"></label>
         <label class="field small">Camadas <input type="number" id="num_layers" value="2"></label>
+        <label class="field small">Método
+          <select id="method">
+            <option value="pcmci">PCMCI</option>
+            <option value="pcmci_plus">PCMCI+</option>
+            <option value="lpcmci">LPCMCI (confundidor)</option>
+          </select>
+        </label>
+        <label class="field small">Dessazonalizar (período)
+          <input type="number" id="deseason_period" value="0" min="0">
+        </label>
       </div>
       <p class="hint">Dica: mantenha <b>Janela ≈ τ_max</b>. Menos épocas = mais rápido
-        (o treino roda em CPU e leva alguns minutos).</p>
+        (o treino roda em CPU e leva alguns minutos). <b>Dessazonalizar</b>: 0 = desligado;
+        7 remove o ciclo semanal, 12 o mensal (a média sazonal é estimada só no treino).
+        <b>LPCMCI</b> lida com causa comum não observada.</p>
       <button id="run-btn" class="primary">▶ Rodar</button>
       <div id="status" class="status hidden">
         <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
